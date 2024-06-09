@@ -29,72 +29,83 @@ class BookServiceTest {
     @Test
     void testSaveBook_Success() {
         // Arrange
-        Book book = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890");
-        when(bookRepository.saveBook(book)).thenReturn(true);
-        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(false);
+        String title = "Cien Años de Soledad";
+        String author = "Gabriel García Márquez";
+        String isbn = "1234567890";
+        when(bookRepository.findByIsbn(isbn)).thenReturn(false);
+        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
 
         // Act
-        boolean result = bookService.saveBook(book);
+        boolean result = bookService.saveBook(title, author, isbn);
 
         // Assert
         Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(book);
+        verify(bookRepository, times(1)).saveBook(any(Book.class));
     }
 
     @Test
     void testSaveBook_EmptyTitleFailure() {
         // Arrange
-        Book book = new Book("", "Gabriel García Márquez", "123");
-        when(bookRepository.saveBook(book)).thenReturn(true);
+        String title = "";
+        String author = "Gabriel García Márquez";
+        String isbn = "1234567890";
+        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
 
         // Act
-        boolean result = bookService.saveBook(book);
+        boolean result = bookService.saveBook(title, author, isbn);
 
         // Assert
         Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(book);
+        verify(bookRepository, times(1)).saveBook(any(Book.class));
     }
 
     @Test
     void testSaveBook_EmptyAuthorFailure() {
         // Arrange
-        Book book = new Book("Cien Años de Soledad", "", "123");
-        when(bookRepository.saveBook(book)).thenReturn(true);
+        String title = "Cien Años de Soledad";
+        String author = "";
+        String isbn = "1234567890";
+        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
 
         // Act
-        boolean result = bookService.saveBook(book);
+        boolean result = bookService.saveBook(title, author, isbn);
 
         // Assert
         Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(book);
+        verify(bookRepository, times(1)).saveBook(any(Book.class));
     }
 
     @Test
     void testSaveBook_EmptyISBNFailure() {
         // Arrange
-        Book book = new Book("Cien Años de Soledad", "Gabriel García Márquez", "");
-        when(bookRepository.saveBook(book)).thenReturn(true);
+        String title = "Cien Años de Soledad";
+        String author = "Gabriel García Márquez";
+        String isbn = "";
+        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
 
         // Act
-        boolean result = bookService.saveBook(book);
+        boolean result = bookService.saveBook(title, author, isbn);
 
         // Assert
         Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(book);
+        verify(bookRepository, times(1)).saveBook(any(Book.class));
     }
 
     @Test
     void testSaveBook_DuplicateISBNFailure() {
         // Arrange
-        Book book = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890");
-        when(bookRepository.saveBook(book)).thenReturn(true);
-        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(true);
+        String title = "Cien Años de Soledad";
+        String author = "Gabriel García Márquez";
+        String isbn = "1234567890";
+
+        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
+        when(bookRepository.findByIsbn(isbn)).thenReturn(true);
 
         // Act
-        boolean result = bookService.saveBook(book);
+        boolean result = bookService.saveBook(title, author, isbn);
 
         // Assert
         Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(book);
+        verify(bookRepository, times(1)).saveBook(any(Book.class));
     }
 }

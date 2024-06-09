@@ -23,27 +23,30 @@ public class BookService {
     /**
      * Saves a book to the database.
      *
-     * @param book The Book object to be saved.
+     * @param title  The title of the book.
+     * @param author The author of the book.
+     * @param isbn   The ISBN of the book.
      * @return true if the book was saved successfully, false otherwise.
      */
-    public boolean saveBook(Book book) {
+    public boolean saveBook(String title, String author, String isbn) {
 
-        if (book.getTitle() == null || book.getTitle().isEmpty()) {
+        if (title == null || title.isEmpty()) {
             return false;
         }
 
-        if (book.getAuthor() == null || book.getAuthor().isEmpty()) {
+        if (author == null || author.isEmpty()) {
             return false;
         }
 
-        if (book.getIsbn() == null || book.getIsbn().isEmpty()) {
+        if (isbn == null || isbn.isEmpty()) {
             return false;
         }
 
-        if (bookRepository.findByIsbn(book.getIsbn())) {
+        if (bookRepository.findByIsbn(isbn)) {
             return false;
         }
 
+        Book book = new Book(title, author, isbn, true);
         boolean result = bookRepository.saveBook(book);
         bookRepository.closeConnection();
 
