@@ -1,35 +1,41 @@
 package repository;
 
 import entity.Book;
-
 import java.sql.*;
-import java.util.Optional;
 
+/**
+ * This class represents a repository for managing book data in a database.
+ */
 public class BookRepository {
 
-    private Connection conecction;
+    private Connection connection;
 
-    public BookRepository() throws SQLException {
-        // Conectar a la base de datos PostgreSQL
-        String url = "jdbc:postgresql://localhost:5432/library";
-        String user = "admin";
-        String password = "admin";
-        conecction = DriverManager.getConnection(url, user, password);
+    /**
+     * Constructs a new BookRepository and establishes a connection to the database.
+     */
+    public BookRepository() {
+        try {
+            String url = "jdbc:postgresql://localhost:5432/library";
+            String user = "postgres";
+            String password = "admin";
+            connection = DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public boolean addBook(Book book) {
-
-        // Verificar que el ISBN no exista ya en la base de datos
-        try {
-            // Crear el libro y añadirlo a la base de datos
-            String insercion = "INSERT INTO books (title, author, isbn) VALUES (?, ?, ?)";
-            PreparedStatement statementInsercion = conecction.prepareStatement(insercion);
-            statementInsercion.setString(1, book.getTitle());
-            statementInsercion.setString(2, book.getAuthor());
-            statementInsercion.setString(3, book.getIsbn());
-            statementInsercion.executeUpdate();
-            closeConnection();
-
+    /**
+     * Saves a book to the database.
+     *
+     * @param book The book object to be saved.
+     * @return true if the book was saved successfully, false otherwise.
+     */
+    public boolean saveBook(Book book) {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO books (title, author, isbn) VALUES (?, ?, ?)")) {
+            statement.setString(1, book.getTitle());
+            statement.setString(2, book.getAuthor());
+            statement.setString(3, book.getIsbn());
+            statement.executeUpdate();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -37,28 +43,31 @@ public class BookRepository {
         }
     }
 
+    /**
+     * Checks if a book with the given ISBN exists in the database.
+     *
+     * @param isbn The ISBN of the book to search for.
+     * @return true if a book with the given ISBN exists, false otherwise.
+     */
     public boolean findByIsbn(String isbn) {
-        try {
-            String consultaISBN = "SELECT COUNT(*) FROM books WHERE isbn = ?";
-            PreparedStatement statementISBN = conecction.prepareStatement(consultaISBN);
-            statementISBN.setString(1, isbn);
-            ResultSet resultSet = statementISBN.executeQuery();
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM books WHERE isbn = ?")) {
+            statement.setString(1, isbn);
+            ResultSet resultSet = statement.executeQuery();
             resultSet.next();
-            if (resultSet.getInt(1) > 0) {
-                return true;
-            }
-            return false;
+            return resultSet.getInt(1) > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // Método para cerrar la conexión a la base de datos
+    /**
+     * Closes the connection to the database.
+     */
     public void closeConnection() {
         try {
-            if (conecction != null && !conecction.isClosed()) {
-                conecction.close();
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
