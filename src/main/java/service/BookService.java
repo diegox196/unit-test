@@ -3,6 +3,8 @@ package service;
 import entity.Book;
 import repository.BookRepository;
 
+import java.util.List;
+
 /**
  * This class provides services for managing book operations.
  * It acts as an intermediary between the application and the book repository,
@@ -31,19 +33,19 @@ public class BookService {
     public boolean saveBook(String title, String author, String isbn) {
 
         if (title == null || title.isEmpty()) {
-            return false;
+            throw new IllegalArgumentException("Title cannot be null or empty");
         }
 
         if (author == null || author.isEmpty()) {
-            return false;
+            throw new IllegalArgumentException("Author cannot be null or empty");
         }
 
         if (isbn == null || isbn.isEmpty()) {
-            return false;
+            throw new IllegalArgumentException("ISBN cannot be null or empty");
         }
 
-        if (bookRepository.findByIsbn(isbn)) {
-            return false;
+        if (bookRepository.findRepeatedIsbn(isbn)) {
+            throw new RuntimeException("ISBN already in use");
         }
 
         Book book = new Book(title, author, isbn, true);
@@ -51,5 +53,35 @@ public class BookService {
         bookRepository.closeConnection();
 
         return result;
+    }
+
+    /**
+     * Searches for books by title.
+     *
+     * @param title The title of the book.
+     * @return List of books matching the title.
+     */
+    public List<Book> searchBooksByTitle(String title) {
+        return bookRepository.findByTitle(title);
+    }
+
+    /**
+     * Searches for books by author.
+     *
+     * @param author The author of the book.
+     * @return List of books matching the author.
+     */
+    public List<Book> searchBooksByAuthor(String author) {
+        return bookRepository.findByAuthor(author);
+    }
+
+    /**
+     * Searches for a book by ISBN.
+     *
+     * @param isbn The ISBN of the book.
+     * @return The book with the matching ISBN.
+     */
+    public Book searchBookByIsbn(String isbn) {
+        return bookRepository.findByIsbn(isbn);
     }
 }
