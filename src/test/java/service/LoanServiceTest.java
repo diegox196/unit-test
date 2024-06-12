@@ -180,4 +180,92 @@ class LoanServiceTest {
         verify(loanRepository, never()).saveLoan(any(Loan.class));
     }
 
+    @Test
+    void testReturnBook_Success() {
+        // Arrange
+        int loanId = 1;
+        Loan activeLoan = new Loan(1, 1, LocalDate.now(), LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
+
+        when(loanRepository.findById(loanId)).thenReturn(activeLoan);
+        when(bookRepository.findById(activeLoan.getBookID())).thenReturn(unavailableBook);
+        when(bookRepository.updateBook(activeLoan.getBookID(), unavailableBook)).thenReturn(true);
+        when(loanRepository.updateReturnedDate(loanId, LocalDate.now())).thenReturn(true);
+
+        // Act
+        boolean result = loanService.returnBook(loanId);
+
+        // Assert
+        Assertions.assertTrue(result);
+        verify(loanRepository, times(1)).findById(loanId);
+        verify(bookRepository, times(1)).findById(activeLoan.getBookID());
+        verify(bookRepository, times(1)).updateBook(activeLoan.getBookID(), unavailableBook);
+        verify(loanRepository, times(1)).updateReturnedDate(loanId, LocalDate.now());
+    }
+
+    @Test
+    void testReturnBook_LoanNotFound() {
+        // Arrange
+        int loanId = 1;
+        String expectedMessage = "Loan not found";
+
+        when(loanRepository.findById(loanId)).thenReturn(null);
+
+        // Act
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> loanService.returnBook(loanId));
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        verify(loanRepository, times(1)).findById(loanId);
+        verify(bookRepository, never()).findById(anyInt());
+        verify(bookRepository, never()).updateBook(anyInt() ,any(Book.class));
+        verify(loanRepository, never()).updateReturnedDate(anyInt(), any(LocalDate.class));
+    }
+
+    @Test
+    void testReturnBook_BookAvailabilityUpdateFailed() {
+        // Arrange
+        int loanId = 1;
+        Loan activeLoan = new Loan(1, 1, LocalDate.now(), LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
+        String expectedMessage = "Book availability update failed";
+
+        when(loanRepository.findById(loanId)).thenReturn(activeLoan);
+        when(bookRepository.findById(activeLoan.getBookID())).thenReturn(unavailableBook);
+        when(bookRepository.updateBook(activeLoan.getBookID(), unavailableBook)).thenReturn(false);
+
+        // Act
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> loanService.returnBook(loanId));
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        verify(loanRepository, times(1)).findById(loanId);
+        verify(bookRepository, times(1)).findById(activeLoan.getBookID());
+        verify(bookRepository, times(1)).updateBook(activeLoan.getBookID(), unavailableBook);
+        verify(loanRepository, never()).updateReturnedDate(anyInt(), any(LocalDate.class));
+    }
+
+    @Test
+    void testReturnBook_UpdateReturnedDateFailed() {
+        // Arrange
+        int loanId = 1;
+        Loan activeLoan = new Loan(1, 1, LocalDate.now(), LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
+        String expectedMessage = "Loan returned date update failed";
+
+        when(loanRepository.findById(loanId)).thenReturn(activeLoan);
+        when(bookRepository.findById(activeLoan.getBookID())).thenReturn(unavailableBook);
+        when(bookRepository.updateBook(activeLoan.getBookID(), unavailableBook)).thenReturn(true);
+        when(loanRepository.updateReturnedDate(loanId, LocalDate.now())).thenReturn(false);
+
+        // Act
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> loanService.returnBook(loanId));
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        verify(loanRepository, times(1)).findById(loanId);
+        verify(bookRepository, times(1)).findById(activeLoan.getBookID());
+        verify(bookRepository, times(1)).updateBook(activeLoan.getBookID(), unavailableBook);
+        verify(loanRepository, times(1)).updateReturnedDate(loanId, LocalDate.now());
+    }
+
+
+
 }

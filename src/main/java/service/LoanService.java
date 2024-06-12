@@ -8,6 +8,7 @@ import repository.LoanRepository;
 import repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * This class provides services for managing loan book operations.
@@ -76,6 +77,36 @@ public class LoanService {
         loanRepository.closeConnection();
 
         return result;
+    }
+
+
+    /**
+     * Registers the return of a loaned book.
+     *
+     * @param loanId The ID of the loan being returned.
+     */
+    public boolean returnBook(int loanId) {
+        Loan loan = loanRepository.findById(loanId);
+        if (loan == null) {
+            throw new RuntimeException("Loan not found");
+        }
+
+        Book book = bookRepository.findById(loan.getBookID());
+        book.setAvailable(true);
+
+        boolean savedBook = bookRepository.updateBook(loan.getBookID(), book);
+        if (!savedBook) {
+            throw new RuntimeException("Book availability update failed");
+        }
+        boolean updatedLoan = loanRepository.updateReturnedDate(loanId, LocalDate.now());
+        if (!updatedLoan) {
+            throw new RuntimeException("Loan returned date update failed");
+        }
+
+        bookRepository.closeConnection();
+        loanRepository.closeConnection();
+
+        return true;
     }
 
 }

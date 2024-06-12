@@ -47,6 +47,28 @@ public class BookRepository {
     }
 
     /**
+     * Updates a book in the database.
+     *
+     * @param bookId The book id.
+     * @param book The book object with updated information.
+     * @return true if the book was updated successfully, false otherwise.
+     */
+    public boolean updateBook(int bookId, Book book) {
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE books SET title = ?, author = ?, isbn = ?, available = ? WHERE id = ?")) {
+            statement.setString(1, book.getTitle());
+            statement.setString(2, book.getAuthor());
+            statement.setString(3, book.getIsbn());
+            statement.setBoolean(4, book.isAvailable());
+            statement.setInt(5, bookId); // Update based on existing book ID
+            int rowsUpdated = statement.executeUpdate();
+            return rowsUpdated > 0; // Check if at least one row was updated
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Finds a book by id.
      *
      * @param id The id of the book to search for.
