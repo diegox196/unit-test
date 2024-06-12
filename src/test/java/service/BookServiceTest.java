@@ -3,6 +3,7 @@ package service;
 import entity.Book;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,185 +26,221 @@ class BookServiceTest {
     @InjectMocks
     private BookService bookService;
 
+    private String title, author, isbn;
+    private Book book1, book2;
+
     @BeforeEach
     void setUp() {
         bookService = new BookService(bookRepository);
+        title = "Cien Años de Soledad";
+        author = "Gabriel García Márquez";
+        isbn = "1234567890";
+        book1 = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", true);
+        book2 = new Book("En agosto nos vemos", "Gabriel García Márquez", "9780618346252", true);
     }
 
-    @Test
-    void testSaveBook_Success() {
-        // Arrange
-        String title = "Cien Años de Soledad";
-        String author = "Gabriel García Márquez";
-        String isbn = "1234567890";
-        when(bookRepository.findRepeatedIsbn(isbn)).thenReturn(false);
-        when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
+    /**
+     * Unit tests for the saveBook method of the BookService class.
+     */
+    @Nested
+    class SaveBookTest {
 
-        // Act
-        boolean result = bookService.saveBook(title, author, isbn);
+        /**
+         * Tests the successful case of saving a new book.
+         */
+        @Test
+        void testSaveBook_Success() {
+            // Arrange
+            when(bookRepository.findRepeatedIsbn(isbn)).thenReturn(false);
+            when(bookRepository.saveBook(any(Book.class))).thenReturn(true);
 
-        // Assert
-        Assertions.assertTrue(result);
-        verify(bookRepository, times(1)).saveBook(any(Book.class));
+            // Act
+            boolean result = bookService.saveBook(title, author, isbn);
+
+            // Assert
+            Assertions.assertTrue(result);
+            verify(bookRepository, times(1)).findRepeatedIsbn(isbn);
+            verify(bookRepository, times(1)).saveBook(any(Book.class));
+        }
+
+        /**
+         * Tests the case when the book title is empty while trying to save a book.
+         */
+        @Test
+        void testSaveBook_EmptyTitleFailure() {
+            // Arrange
+            String emptyTitle = "";
+            String expectedMessage = "Title cannot be null or empty";
+
+            // Act
+            RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
+                    bookService.saveBook(emptyTitle, author, isbn)
+            );
+
+            // Assert
+            Assertions.assertEquals(expectedMessage, exception.getMessage());
+            verify(bookRepository, never()).saveBook(any(Book.class));
+        }
+
+        /**
+         * Tests the case when the book author is empty while trying to save a book.
+         */
+        @Test
+        void testSaveBook_EmptyAuthorFailure() {
+            // Arrange
+            String emptyAuthor = "";
+            String expectedMessage = "Author cannot be null or empty";
+
+            // Act
+            RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
+                    bookService.saveBook(title, emptyAuthor, isbn)
+            );
+
+            // Assert
+            Assertions.assertEquals(expectedMessage, exception.getMessage());
+            verify(bookRepository, never()).saveBook(any(Book.class));
+        }
+
+        /**
+         * Tests the case when the book ISBN is empty while trying to save a book.
+         */
+        @Test
+        void testSaveBook_EmptyISBNFailure() {
+            // Arrange
+            String emptyIsbn = "";
+            String expectedMessage = "ISBN cannot be null or empty";
+
+            // Act
+            RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
+                    bookService.saveBook(title, author, emptyIsbn)
+            );
+
+            // Assert
+            Assertions.assertEquals(expectedMessage, exception.getMessage());
+            verify(bookRepository, never()).saveBook(any(Book.class));
+        }
+
+        /**
+         * Tests the case when the book ISBN is already in use while trying to save a book.
+         */
+        @Test
+        void testSaveBook_DuplicateISBNFailure() {
+            // Arrange
+            String expectedMessage = "ISBN already in use";
+
+            when(bookRepository.findRepeatedIsbn(isbn)).thenReturn(true);
+
+            // Act
+            RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () ->
+                    bookService.saveBook(title, author, isbn)
+            );
+
+            // Assert
+            Assertions.assertEquals(expectedMessage, exception.getMessage());
+            verify(bookRepository, times(1)).findRepeatedIsbn(isbn);
+            verify(bookRepository, never()).saveBook(any(Book.class));
+        }
     }
 
-    @Test
-    void testSaveBook_EmptyTitleFailure() {
-        // Arrange
-        String title = "";
-        String author = "Gabriel García Márquez";
-        String isbn = "1234567890";
-        String expectedMessage = "Title cannot be null or empty";
+    /**
+     * Unit tests for the saveBook method of the BookService class.
+     */
+    @Nested
+    class SearchBookTest {
 
-        // Act
-        RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
-                bookService.saveBook(title, author, isbn)
-        );
+        /**
+         * Tests the successful case of searching for books by title.
+         */
+        @Test
+        void testSearchBooksByTitle_Success() {
+            // Arrange
+            List<Book> expectedBooks = Arrays.asList(book1, book2);
+            when(bookRepository.findByTitle(title)).thenReturn(expectedBooks);
 
-        // Assert
-        Assertions.assertEquals(expectedMessage, exception.getMessage());
-        verify(bookRepository, never()).saveBook(any(Book.class));
-    }
+            // Act
+            List<Book> result = bookService.searchBooksByTitle(title);
 
-    @Test
-    void testSaveBook_EmptyAuthorFailure() {
-        // Arrange
-        String title = "Cien Años de Soledad";
-        String author = "";
-        String isbn = "1234567890";
-        String expectedMessage = "Author cannot be null or empty";
+            // Assert
+            Assertions.assertEquals(expectedBooks, result);
+        }
 
-        // Act
-        RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
-                bookService.saveBook(title, author, isbn)
-        );
+        /**
+         * Tests the successful case of searching for books by author.
+         */
+        @Test
+        void testSearchBooksByAuthor_Success() {
+            // Arrange
+            List<Book> expectedBooks = Arrays.asList(book1, book2);
+            when(bookRepository.findByAuthor(author)).thenReturn(expectedBooks);
 
-        // Assert
-        Assertions.assertEquals(expectedMessage, exception.getMessage());
-        verify(bookRepository, never()).saveBook(any(Book.class));
-    }
+            // Act
+            List<Book> result = bookService.searchBooksByAuthor(author);
 
-    @Test
-    void testSaveBook_EmptyISBNFailure() {
-        // Arrange
-        String title = "Cien Años de Soledad";
-        String author = "Gabriel García Márquez";
-        String isbn = "";
-        String expectedMessage = "ISBN cannot be null or empty";
+            // Assert
+            Assertions.assertEquals(expectedBooks, result);
+        }
 
-        // Act
-        RuntimeException exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
-                bookService.saveBook(title, author, isbn)
-        );
+        /**
+         * Tests the successful case of searching for a book by ISBN.
+         */
+        @Test
+        void testSearchBookByIsbn_Success() {
+            // Arrange
+            when(bookRepository.findByIsbn(isbn)).thenReturn(book1);
 
-        // Assert
-        Assertions.assertEquals(expectedMessage, exception.getMessage());
-        verify(bookRepository, never()).saveBook(any(Book.class));
-    }
+            // Act
+            Book result = bookService.searchBookByIsbn(isbn);
 
-    @Test
-    void testSaveBook_DuplicateISBNFailure() {
-        // Arrange
-        String title = "Cien Años de Soledad";
-        String author = "Gabriel García Márquez";
-        String isbn = "1234567890";
-        String expectedMessage = "ISBN already in use";
+            // Assert
+            Assertions.assertEquals(book1, result);
+        }
 
-        when(bookRepository.findRepeatedIsbn(isbn)).thenReturn(true);
+        /**
+         * Tests the case when searching for books with an empty title.
+         */
+        @Test
+        void testSearchBooksByTitle_EmptyTitle() {
+            // Arrange
+            String emptyTitle = "";
+            when(bookRepository.findByTitle(emptyTitle)).thenReturn(Collections.emptyList());
 
-        // Act
-        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () ->
-                bookService.saveBook(title, author, isbn)
-        );
+            // Act
+            List<Book> result = bookService.searchBooksByTitle(emptyTitle);
 
-        // Assert
-        Assertions.assertEquals(expectedMessage, exception.getMessage());
-        verify(bookRepository, times(1)).findRepeatedIsbn(isbn);
-        verify(bookRepository, never()).saveBook(any(Book.class));
-    }
+            // Assert
+            Assertions.assertTrue(result.isEmpty());
+        }
 
-    @Test
-    void testSearchBooksByTitle_Success() {
-        // Arrange
-        String title = "Cien Años de Soledad";
-        Book book1 = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", true);
-        Book book2 = new Book("Cien Años de Soledad", "J.R.R. Tolkien", "9780618346252", true);
-        List<Book> expectedBooks = Arrays.asList(book1, book2);
-        when(bookRepository.findByTitle(title)).thenReturn(expectedBooks);
+        /**
+         * Tests the case when searching for books with an empty author.
+         */
+        @Test
+        void testSearchBooksByAuthor_EmptyAuthor() {
+            // Arrange
+            String emptyAuthor = "";
+            when(bookRepository.findByAuthor(emptyAuthor)).thenReturn(Collections.emptyList());
 
-        // Act
-        List<Book> result = bookService.searchBooksByTitle(title);
+            // Act
+            List<Book> result = bookService.searchBooksByAuthor(emptyAuthor);
 
-        // Assert
-        Assertions.assertEquals(expectedBooks, result);
-    }
+            // Assert
+            Assertions.assertTrue(result.isEmpty());
+        }
 
-    @Test
-    void testSearchBooksByAuthor_Success() {
-        // Arrange
-        String author = "Gabriel García Márquez";
-        Book book1 = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", true);
-        Book book2 = new Book("En agosto nos vemos", "Gabriel García Márquez", "9780618346252", true);
-        List<Book> expectedBooks = Arrays.asList(book1, book2);
-        when(bookRepository.findByAuthor(author)).thenReturn(expectedBooks);
+        /**
+         * Tests the case when searching for a book with an invalid ISBN.
+         */
+        @Test
+        void testSearchBookByIsbn_InvalidIsbn() {
+            // Arrange
+            String invalidIsbn = "invalid-isbn";
+            when(bookRepository.findByIsbn(invalidIsbn)).thenReturn(null);
 
-        // Act
-        List<Book> result = bookService.searchBooksByAuthor(author);
+            // Act
+            Book result = bookService.searchBookByIsbn(invalidIsbn);
 
-        // Assert
-        Assertions.assertEquals(expectedBooks, result);
-    }
-
-    @Test
-    void testSearchBookByIsbn_Success() {
-        // Arrange
-        String isbn = "1234567890";
-        Book book = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", true);
-        when(bookRepository.findByIsbn(isbn)).thenReturn(book);
-
-        // Act
-        Book result = bookService.searchBookByIsbn(isbn);
-
-        // Assert
-        Assertions.assertEquals(book, result);
-    }
-
-    @Test
-    void testSearchBooksByTitle_EmptyTitle() {
-        // Arrange
-        String title = "";
-        when(bookRepository.findByTitle(title)).thenReturn(Collections.emptyList());
-
-        // Act
-        List<Book> result = bookService.searchBooksByTitle(title);
-
-        // Assert
-        Assertions.assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void testSearchBooksByAuthor_EmptyAuthor() {
-        // Arrange
-        String author = "";
-        when(bookRepository.findByAuthor(author)).thenReturn(Collections.emptyList());
-
-        // Act
-        List<Book> result = bookService.searchBooksByAuthor(author);
-
-        // Assert
-        Assertions.assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void testSearchBookByIsbn_InvalidIsbn() {
-        // Arrange
-        String isbn = "invalid-isbn";
-        when(bookRepository.findByIsbn(isbn)).thenReturn(null);
-
-        // Act
-        Book result = bookService.searchBookByIsbn(isbn);
-
-        // Assert
-        Assertions.assertNull(result);
+            // Assert
+            Assertions.assertNull(result);
+        }
     }
 }
