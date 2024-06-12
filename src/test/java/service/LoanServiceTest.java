@@ -15,6 +15,9 @@ import repository.LoanRepository;
 import repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -266,6 +269,60 @@ class LoanServiceTest {
         verify(loanRepository, times(1)).updateReturnedDate(loanId, LocalDate.now());
     }
 
+    @Test
+    void testGetLoanHistory_Success() {
+        // Arrange
+        int userId = 1;
+        Loan loan1 = new Loan(1, 1, LocalDate.now(), LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
+        Loan loan2 = new Loan(2, 1, LocalDate.now(), LocalDate.now().plusDays(2), LocalDate.now().plusDays(2));
+        List<Loan> expectedLoans = Arrays.asList(loan1, loan2);
+
+        when(userRepository.findById(userId)).thenReturn(validUser);
+        when(loanRepository.findByUserId(userId)).thenReturn(expectedLoans);
+
+        // Act
+        List<Loan> result = loanService.getLoanHistory(userId);
+
+        // Assert
+        Assertions.assertEquals(expectedLoans, result);
+        verify(userRepository, times(1)).findById(userId);
+        verify(loanRepository, times(1)).findByUserId(userId);
+    }
+
+    @Test
+    void testGetLoanHistory_UserNotFound() {
+        // Arrange
+        int userId = 1;
+        String expectedMessage = "User not found";
+        when(userRepository.findById(userId)).thenReturn(null);
+
+        // Act
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> loanService.getLoanHistory(userId));
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+        verify(loanRepository, never()).findByUserId(anyInt());
+    }
+
+    @Test
+    void testGetLoanHistory_LoansNotFound() {
+        // Arrange
+        int userId = 1;
+        List<Loan> expectedLoans = new ArrayList<>();
+        String expectedMessage = "No loan found for user";
+
+        when(userRepository.findById(userId)).thenReturn(validUser);
+        when(loanRepository.findByUserId(userId)).thenReturn(expectedLoans);
+
+        // Act
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> loanService.getLoanHistory(userId));
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        verify(userRepository, times(1)).findById(userId);
+        verify(loanRepository, times(1)).findByUserId(userId);
+    }
 
 
 }

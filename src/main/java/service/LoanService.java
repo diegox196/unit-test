@@ -8,6 +8,7 @@ import repository.LoanRepository;
 import repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,9 +38,9 @@ public class LoanService {
     /**
      * Registers a loan of a book to a user.
      *
-     * @param bookId The ID of the book being loaned.
-     * @param userId The ID of the user taking the loan.
-     * @param loanDate The date the loan starts.
+     * @param bookId     The ID of the book being loaned.
+     * @param userId     The ID of the user taking the loan.
+     * @param loanDate   The date the loan starts.
      * @param returnDate The date the loan is due.
      */
     public boolean loanBook(int bookId, int userId, LocalDate loanDate, LocalDate returnDate) {
@@ -107,6 +108,30 @@ public class LoanService {
         loanRepository.closeConnection();
 
         return true;
+    }
+
+    /**
+     * Retrieves the loan history of a user.
+     *
+     * @param userId The ID of the user.
+     * @return List of loans associated with the user.
+     */
+    public List<Loan> getLoanHistory(int userId) {
+        User user = userRepository.findById(userId);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        List<Loan> loanList = loanRepository.findByUserId(userId);
+        if (loanList.isEmpty()) {
+            throw new RuntimeException("No loan found for user");
+        }
+
+        userRepository.closeConnection();
+        loanRepository.closeConnection();
+
+        return loanList;
     }
 
 }

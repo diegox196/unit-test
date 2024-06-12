@@ -66,7 +66,7 @@ public class LoanRepository {
                         resultSet.getInt("book_id"),
                         resultSet.getInt("user_id"),
                         resultSet.getDate("loan_date").toLocalDate(),
-                        resultSet.getDate("due_date").toLocalDate()
+                        resultSet.getDate("expected_return_date").toLocalDate()
                 );
             }
         } catch (SQLException e) {
@@ -94,6 +94,32 @@ public class LoanRepository {
         }
     }
 
+    /**
+     * Finds loans by user ID.
+     *
+     * @param userId The ID of the user to search for.
+     * @return List of loans associated with the user.
+     */
+    public List<Loan> findByUserId(int userId) {
+        List<Loan> loans = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM loans WHERE user_id = ?")) {
+            statement.setLong(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                loans.add(new Loan(
+                        // Assuming the existence of appropriate constructors and methods in Loan and User classes
+                        resultSet.getInt("book_id"),
+                        resultSet.getInt("user_id"),
+                        resultSet.getDate("loan_date").toLocalDate(),
+                        resultSet.getDate("expected_return_date").toLocalDate(),
+                        resultSet.getDate("actual_return_date").toLocalDate()
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return loans;
+    }
 
     /**
      * Closes the connection to the database.
