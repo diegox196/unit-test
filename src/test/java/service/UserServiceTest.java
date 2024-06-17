@@ -19,7 +19,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_exito() {
+    void registerUser_succes() {
         // Arrange
         String name = "Juan Perez";
         String email = "juan.perez@example.com";
@@ -36,7 +36,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_emailInvalido() {
+    void registerUser_InvalidEmail() {
         // Arrange
         String name = "Juan Perez";
         String email = "juan.perez";
@@ -51,7 +51,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_nombreVacio() {
+    void registerUser_EmptyName() {
         // Arrange
         String name = "";
         String email = "juan.perez@example.com";
@@ -66,7 +66,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_emailDuplicado() {
+    void registerUser_DuplicateEmail() {
         // Arrange
         String name = "Juan Perez";
         String email = "juan.perez@example.com";
@@ -82,7 +82,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_nombreInvalido() {
+    void registerUser_InvalidName() {
         // Arrange
         String name = "Juan#Perez";
         String email = "juan.perez@example.com";

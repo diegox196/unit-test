@@ -1,6 +1,7 @@
 package service;
 
 import entity.Book;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -243,4 +244,77 @@ class BookServiceTest {
             Assertions.assertNull(result);
         }
     }
+
+    @Nested
+    class IsBookAvailableTest {
+        private BookService bookService;
+        private BookRepository bookRepository;
+
+        @BeforeEach
+        public void setUp() {
+            bookRepository = mock(BookRepository.class);
+            bookService = new BookService(bookRepository);
+        }
+
+        @Test
+        public void seeAvailability_success() {
+            int bookId = 456;
+            when(bookRepository.isBookAvailable(bookId)).thenReturn(true);
+
+            boolean isAvailable = bookService.checkBookAvailability(bookId);
+
+            assertTrue(isAvailable);
+            verify(bookRepository).isBookAvailable(bookId);
+        }
+
+        @Test
+        public void consultAvailability_book_NotExisting() {
+            int bookId = 789;
+            when(bookRepository.isBookAvailable(bookId)).thenReturn(null);
+
+            Exception exception = assertThrows(RuntimeException.class, () -> {
+                bookService.checkBookAvailability(bookId);
+            });
+
+            assertEquals("Book does not exist or database error occurred", exception.getMessage());
+            verify(bookRepository).isBookAvailable(bookId);
+        }
+
+        @Test
+        public void check_availability_book_loaned() {
+            int bookId = 456;
+            when(bookRepository.isBookAvailable(bookId)).thenReturn(false);
+
+            boolean isAvailable = bookService.checkBookAvailability(bookId);
+
+            assertFalse(isAvailable);
+            verify(bookRepository).isBookAvailable(bookId);
+        }
+
+        @Test
+        public void seeAvailability_ConnectionError() {
+            int bookId = 456;
+            when(bookRepository.isBookAvailable(bookId)).thenReturn(null);
+
+            Exception exception = assertThrows(RuntimeException.class, () -> {
+                bookService.checkBookAvailability(bookId);
+            });
+
+            assertEquals("Book does not exist or database error occurred", exception.getMessage());
+            verify(bookRepository).isBookAvailable(bookId);
+        }
+
+        @Test
+        public void consultAvailability_Incomplete_data() {
+            int bookId = 0; // or any invalid ID
+
+            Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+                bookService.checkBookAvailability(bookId);
+            });
+
+            assertEquals("Book ID must be greater than zero", exception.getMessage());
+        }
+    }
+
 }
+

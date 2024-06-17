@@ -121,6 +121,38 @@ public class LoanRepository {
         return loans;
     }
 
+
+
+    /**
+     * Finds books that have not been returned by the specified date.
+     *
+     * @param date The date to check for overdue books.
+     * @return List of books that are overdue.
+     */
+    public List<Book> findOverdueBooks(Date date) {
+        List<Book> books = new ArrayList<>();
+        String query = "SELECT b.title, b.author, b.isbn, b.available " +
+                         "FROM books b JOIN loans l ON b.id = l.book_id " +
+                        "WHERE l.due_date < ? AND l.return_date IS NULL";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setDate(1, date);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                books.add(new Book(
+                        resultSet.getString("title"),
+                        resultSet.getString("author"),
+                        resultSet.getString("isbn"),
+                        resultSet.getBoolean("available")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return books;
+    }
+
     /**
      * Closes the connection to the database.
      */

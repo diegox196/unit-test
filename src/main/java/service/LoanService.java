@@ -6,7 +6,9 @@ import entity.User;
 import repository.BookRepository;
 import repository.LoanRepository;
 import repository.UserRepository;
-
+import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -132,6 +134,26 @@ public class LoanService {
         loanRepository.closeConnection();
 
         return loanList;
+    }
+
+
+    /**
+     * Generates a report of books that have not been returned by the specified date.
+     * @return List of books that are overdue.
+     * @throws IllegalArgumentException if the date is invalid or null.
+     */
+    public List<Book> generateOverdueBooksReport(String actualDate) {
+        if (actualDate == null || actualDate.isEmpty()) {
+            throw new IllegalArgumentException("Date cannot be null or empty");
+        }
+        try {
+            Date date = Date.valueOf(actualDate);
+            return loanRepository.findOverdueBooks(date);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid date format. Please use 'yyyy-MM-dd'");
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Connection error", e);
+        }
     }
 
 }

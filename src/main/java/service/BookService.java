@@ -84,4 +84,22 @@ public class BookService {
     public Book searchBookByIsbn(String isbn) {
         return bookRepository.findByIsbn(isbn);
     }
+
+    public Boolean checkBookAvailability(int bookId) {
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("Book ID must be greater than zero");
+        }
+
+        Boolean isAvailable = bookRepository.isBookAvailable(bookId);
+
+        if (isAvailable == null) {
+            throw new RuntimeException("Book does not exist or database error occurred");
+        }
+
+        return isAvailable;
+    }
+
 }
+
+
+

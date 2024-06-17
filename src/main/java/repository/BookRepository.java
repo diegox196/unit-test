@@ -184,6 +184,28 @@ public class BookRepository {
         return null;
     }
 
+
+    /**
+     * Checks if a book is available by its ID.
+     *
+     * @param bookId The ID of the book to check.
+     * @return true if the book is available, false if it's checked out or does not exist.
+     */
+    public Boolean isBookAvailable(int bookId) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT available FROM books WHERE id = ?")) {
+            statement.setInt(1, bookId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getBoolean("available");
+            } else {
+                return null; // Book does not exist
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null; // Database error
+        }
+    }
+
     /**
      * Closes the connection to the database.
      */
@@ -197,4 +219,8 @@ public class BookRepository {
         }
     }
 
+
+
 }
+
+
