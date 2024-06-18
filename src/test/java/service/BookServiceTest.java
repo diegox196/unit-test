@@ -247,28 +247,23 @@ class BookServiceTest {
 
     @Nested
     class IsBookAvailableTest {
-        private BookService bookService;
-        private BookRepository bookRepository;
-
-        @BeforeEach
-        public void setUp() {
-            bookRepository = mock(BookRepository.class);
-            bookService = new BookService(bookRepository);
-        }
 
         @Test
-        public void seeAvailability_success() {
+        public void testSeeAvailability_Success() {
+            // Arrange
             int bookId = 456;
             when(bookRepository.isBookAvailable(bookId)).thenReturn(true);
 
+            // Act
             boolean isAvailable = bookService.checkBookAvailability(bookId);
 
+            //Assert
             assertTrue(isAvailable);
             verify(bookRepository).isBookAvailable(bookId);
         }
 
         @Test
-        public void consultAvailability_book_NotExisting() {
+        public void testSeeAvailability_BookNotExisting() {
             int bookId = 789;
             when(bookRepository.isBookAvailable(bookId)).thenReturn(null);
 

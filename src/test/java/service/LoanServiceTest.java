@@ -1,5 +1,5 @@
 package service;
-import entity.Book;
+
 import entity.Book;
 import entity.Loan;
 import entity.User;
@@ -11,8 +11,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import repository.BookRepository;
 import repository.LoanRepository;
 import repository.UserRepository;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +22,6 @@ import java.util.List;
 import java.sql.Date;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoanServiceTest {
@@ -43,9 +44,6 @@ class LoanServiceTest {
         availableBook = new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", true);
         unavailableBook = new Book("El Señor de los Anillos", "J.R.R. Tolkien", "9780618346252", false);
         validUser = new User("John Doe", "example@mail.com");
-       /** loanService = new LoanService(loanRepository, bookRepository, userRepository);
-        loanRepository = mock(LoanRepository.class);*/
-
     }
 
     /**
@@ -393,7 +391,8 @@ class LoanServiceTest {
     @Nested
     class GetOverdueLoanHistoryTests {
         @Test
-        public void BooksNotGiven_report() {
+        public void booksNotGiven_report() {
+            // Arrange
             String actualDate = "2024-06-10";
             List<Book> overdueBooks = Arrays.asList(
                     new Book("Cien Años de Soledad", "Gabriel García Márquez", "1234567890", false),
@@ -402,58 +401,71 @@ class LoanServiceTest {
 
             when(loanRepository.findOverdueBooks(Date.valueOf(actualDate))).thenReturn(overdueBooks);
 
+            // Act
             List<Book> result = loanService.generateOverdueBooksReport(actualDate);
 
+            // Assert
             assertEquals(2, result.size());
             verify(loanRepository, times(1)).findOverdueBooks(Date.valueOf(actualDate));
         }
 
         @Test
-        public void BooksNotDelayed_withoutBooksOverdue() {
+        public void testBooksNotDelayed_withoutBooksOverdue() {
+            // Arrange
             String actualDate = "2024-06-10";
             List<Book> overdueBooks = new ArrayList<>();
 
             when(loanRepository.findOverdueBooks(Date.valueOf(actualDate))).thenReturn(overdueBooks);
 
-            List<Book> resultado = loanService.generateOverdueBooksReport(actualDate);
+            // Act
+            List<Book> result = loanService.generateOverdueBooksReport(actualDate);
 
-            assertTrue(resultado.isEmpty());
+            // Assert
+            assertTrue(result.isEmpty());
             verify(loanRepository).findOverdueBooks(Date.valueOf(actualDate));
         }
 
         @Test
-        public void ReportBooksNotReturned_ConnectionError() {
+        public void testReportBooksNotReturned_ConnectionError() {
+            // Arrange
             String actualDate = "2024-06-10";
-
             when(loanRepository.findOverdueBooks(Date.valueOf(actualDate))).thenThrow(new RuntimeException("Connection error"));
 
+            // Act
             Exception exception = assertThrows(RuntimeException.class, () -> {
                 loanService.generateOverdueBooksReport(actualDate);
             });
 
+            // Assert
             assertEquals("Connection error", exception.getMessage());
             verify(loanRepository).findOverdueBooks(Date.valueOf(actualDate));
         }
 
         @Test
-        public void ReportBooksNotDelayed_InvalidDate() {
+        public void testReportBooksNotDelayed_InvalidDate() {
+            // Arrange
             String invalidDate = "2024-13-10";
 
+            // Act
             Exception exception = assertThrows(IllegalArgumentException.class, () -> {
                 loanService.generateOverdueBooksReport(invalidDate);
             });
 
+            // Assert
             assertEquals("Invalid date format. Please use 'yyyy-MM-dd'", exception.getMessage());
         }
 
         @Test
-        public void ReportBooksNotDelivered_incomplete_data() {
-            String IncompleteDate = "";
+        public void testReportBooksNotDelivered_IncompleteData() {
+            // Arrange
+            String incompleteDate = "";
 
+            // Act
             Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-                loanService.generateOverdueBooksReport(IncompleteDate);
+                loanService.generateOverdueBooksReport(incompleteDate);
             });
 
+            // Assert
             assertEquals("Date cannot be null or empty", exception.getMessage());
         }
     }

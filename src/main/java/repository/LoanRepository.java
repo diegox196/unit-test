@@ -2,7 +2,6 @@ package repository;
 
 import entity.Book;
 import entity.Loan;
-import entity.User;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -85,7 +84,7 @@ public class LoanRepository {
     public boolean updateReturnedDate(int loanId, LocalDate actualReturnedDate) {
         try (PreparedStatement statement = connection.prepareStatement("UPDATE loans SET actual_return_date = ? WHERE id = ?")) {
             statement.setDate(1, Date.valueOf(actualReturnedDate));
-            statement.setLong(2, loanId);
+            statement.setInt(2, loanId);
             statement.executeUpdate();
             return true;
         } catch (SQLException e) {

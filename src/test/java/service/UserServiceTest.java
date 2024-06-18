@@ -19,7 +19,7 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser_succes() {
+    void registerUser_Success() {
         // Arrange
         String name = "Juan Perez";
         String email = "juan.perez@example.com";
