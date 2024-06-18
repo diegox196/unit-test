@@ -10,6 +10,8 @@ import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +25,7 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     /**
      * Constructs a new LoanService instance.
@@ -31,10 +34,11 @@ public class LoanService {
      * @param bookRepository The BookRepository instance to be used for book operations.
      * @param userRepository The UserRepository instance to be used for user operations.
      */
-    public LoanService(LoanRepository loanRepository, BookRepository bookRepository, UserRepository userRepository) {
+    public LoanService(LoanRepository loanRepository, BookRepository bookRepository, UserRepository userRepository,EmailService emailService) {
         this.loanRepository = loanRepository;
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -156,4 +160,31 @@ public class LoanService {
         }
     }
 
+
+    public boolean SendNotification(int userID, int bookID, String dateReturn) {
+        try {
+            LocalDate date = LocalDate.parse(dateReturn, DateTimeFormatter.ISO_LOCAL_DATE);
+
+            User user = userRepository.findById(userID);
+            if (user == null) {
+                return false;
+            }
+
+            Book book = bookRepository.findById(bookID);
+            if (book == null) {
+                return false;
+            }
+
+            String emailBody = "Estimado " + user.getName() + ",\n\n"
+                    + "Este es un recordatorio de que debe devolver el libro '" + book.getTitle()
+                    + "' antes del " + dateReturn + ".\n\n"
+                    + "Gracias.";
+
+            return emailService.sendEmail(user.getEmail(), "Recordatorio de Devolución de Libro", emailBody);
+        } catch (DateTimeParseException e) {
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException("Error de conexión al servidor de correos", e);
+        }
+    }
 }

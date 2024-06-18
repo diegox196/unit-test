@@ -35,6 +35,8 @@ class LoanServiceTest {
     private LoanRepository loanRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private LoanService loanService;
@@ -467,6 +469,97 @@ class LoanServiceTest {
 
             // Assert
             assertEquals("Date cannot be null or empty", exception.getMessage());
+        }
+    }
+    /**
+     * Unit tests for the SendNotification method of the LoanService class.
+     */
+    @Nested
+    class SendNotifications {
+
+        @Test
+        void SendNotification_succes() {
+            int userID = 123;
+            int bookID = 456;
+            String dateReturn = "2024-06-10";
+
+            when(userRepository.findById(userID)).thenReturn(validUser);
+            when(bookRepository.findById(bookID)).thenReturn(availableBook);
+            when(emailService.sendEmail(anyString(), anyString(), anyString())).thenReturn(true);
+
+            boolean result = loanService.SendNotification(userID, bookID, dateReturn);
+
+            assertTrue(result);
+            verify(userRepository).findById(userID);
+            verify(bookRepository).findById(bookID);
+            verify(emailService).sendEmail(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        void SendNotification_UserNotExists() {
+            int userID = 999;
+            int bookID = 456;
+            String dateReturn = "2024-06-10";
+
+            when(userRepository.findById(userID)).thenReturn(null);
+
+            boolean result = loanService.SendNotification(userID, bookID, dateReturn);
+
+            assertFalse(result);
+            verify(userRepository).findById(userID);
+            verify(bookRepository, never()).findById(bookID);
+            verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        void SendNotification_BookNotExists() {
+            int userID = 123;
+            int bookID = 999;
+            String dateReturn = "2024-06-10";
+
+            when(userRepository.findById(userID)).thenReturn(validUser);
+            when(bookRepository.findById(bookID)).thenReturn(null);
+
+            boolean result = loanService.SendNotification(userID, bookID, dateReturn);
+
+            assertFalse(result);
+            verify(userRepository).findById(userID);
+            verify(bookRepository).findById(bookID);
+            verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        void SendNotification_InvalidDate() {
+            int userID = 123;
+            int bookID = 456;
+            String dateReturn = "2024-13-10";
+
+            boolean result = loanService.SendNotification(userID, bookID, dateReturn);
+
+            assertFalse(result);
+            verify(userRepository, never()).findById(userID);
+            verify(bookRepository, never()).findById(bookID);
+            verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+        }
+
+        @Test
+        void SendNotification_ConectionError() {
+            int userID = 123;
+            int bookID = 456;
+            String dateReturn = "2024-06-10";
+
+            when(userRepository.findById(userID)).thenReturn(validUser);
+            when(bookRepository.findById(bookID)).thenReturn(availableBook);
+            when(emailService.sendEmail(anyString(), anyString(), anyString())).thenThrow(new RuntimeException("Error de conexión al servidor de correos"));
+
+            Exception exception = assertThrows(RuntimeException.class, () -> {
+                loanService.SendNotification(userID, bookID, dateReturn);
+            });
+
+            assertEquals("Error de conexión al servidor de correos", exception.getMessage());
+            verify(userRepository).findById(userID);
+            verify(bookRepository).findById(bookID);
+            verify(emailService).sendEmail(anyString(), anyString(), anyString());
         }
     }
 }
